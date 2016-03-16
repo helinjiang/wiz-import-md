@@ -135,17 +135,17 @@ function getLocalString(filename, stringName) {
  */
 function doImport(path) {
     // objApp.AppPath wiz的安装路径
-    var templateFileName = objApp.AppPath + "templates\\new\\journal\\journal.template.htm";
-    
-    // 从一个text文件获得文字内容。可以有效地获得避免乱码。bstrFileName：文件名；返回值：text里面的文字
-    var templateHtml = objCommon.LoadTextFromFile(templateFileName);
-    
-    var journalIniFileName = objApp.AppPath + "templates\\new\\journal.ini";
+    // var templateFileName = objApp.AppPath + "templates\\new\\journal\\journal.template.htm";
+
+    // // 从一个text文件获得文字内容。可以有效地获得避免乱码。bstrFileName：文件名；返回值：text里面的文字
+    // var templateHtml = objCommon.LoadTextFromFile(templateFileName);
+
+    // var journalIniFileName = objApp.AppPath + "templates\\new\\journal.ini";
 
     ///枚举一个文件夹下面的文件。bstrPath：文件夹路径；bstrFileExt：扩展名，格式为*.txt;*.jpg;*.png或者*.*；vbIncludeSubFolders：是否包含子文件夹；
     ///返回值：枚举到的文件名。类型为一个安全数组，如果在javascript里面使用，请参阅本文后面部分。
-    var objFiles = objCommon.EnumFiles(path, "*.html", false);
-   
+    var objFiles = objCommon.EnumFiles(path, "*.md", false);
+
     //
     var arrFiles = objFiles;
 
@@ -164,95 +164,64 @@ function doImport(path) {
 
         // 获得文件内容
         var html = objCommon.LoadTextFromFile(filename);
+        alert(html);
 
         //
-        var objParts = objCommon.HtmlExtractTags(html, "div", "class", "qqshowbd");
-        if (null == objParts)
-            continue;
+        // var objParts = objCommon.HtmlExtractTags(html, "div", "class", "qqshowbd");
+        // if (null == objParts)
+        //     continue;
 
-        var arrParts = objParts;
-        for (var iPart = 0; iPart < arrParts.length; iPart++) {
-            var part = arrParts[iPart];
-            //
-            var parthtml = part;
-            //
-            var title = getTitle(parthtml);
-            //
-            var detail = getDetail(parthtml);
-            //
-            var date = detail["date"];
-            var category = detail["category"];
-            var weather = detail["weather"];
-            if (date == null)
-                date = new Date();
-            if (category == null)
-                category = "未分类";
-            if (weather == null)
-                weather = "";
-            //
-            var date_string = DateToChineseStr(date);
-            //
-            var title = date_string + " " + title;
-            //
-            var location;
-            if (asjournal) {
-                location = "/My Journals/";
-            } else {
-                location = "/QQ记事本/" + category + "/";
-            }
-            location = location + date.getFullYear() + "-" + formatInt(date.getMonth() + 1) + "/";
-            //
-            var objFolder = objDatabase.GetFolderByLocation(location, true);
-            //
-            var objDoc = objFolder.CreateDocument2(title, "");
-            if (asjournal) {
-                objDoc.Type = "journal";
-                setParamValue(objDoc, "journal-date", DateToStr(date) + " 00:00:00");
-            }
-            //
-            var htmltext = "";
-            if (asjournal) {
-                htmltext = templateHtml;
-                //
-                htmltext = htmltext.replace("%title%", title);
+        // var arrParts = objParts;
+        // for (var iPart = 0; iPart < arrParts.length; iPart++) {
+        //     var part = arrParts[iPart];
+        //     //
+        //     var parthtml = part;
+        //     //
+        //     var title = getTitle(parthtml);
+        //     //
+        //     var detail = getDetail(parthtml);
+        //     //
+        //     var date = detail["date"];
+        //     var category = detail["category"];
+        //     var weather = detail["weather"];
+        //     if (date == null)
+        //         date = new Date();
+        //     if (category == null)
+        //         category = "未分类";
+        //     if (weather == null)
+        //         weather = "";
+        //     //
+        //     var date_string = DateToChineseStr(date);
+        //     //
+        //     var title = date_string + " " + title;
+        //     //
+        //     var location = "/QQ记事本/" + category + "/";
 
-                var resSunday = getLocalString(journalIniFileName, "resSunday");
-                var resMonday = getLocalString(journalIniFileName, "resMonday");
-                var resTuesday = getLocalString(journalIniFileName, "resTuesday");
-                var resWednesday = getLocalString(journalIniFileName, "resWednesday");
-                var resThursday = getLocalString(journalIniFileName, "resThursday");
-                var resFriday = getLocalString(journalIniFileName, "resFriday");
-                var resSaturday = getLocalString(journalIniFileName, "resSaturday");
+        //     location = location + date.getFullYear() + "-" + formatInt(date.getMonth() + 1) + "/";
+        //     //
+        //     var objFolder = objDatabase.GetFolderByLocation(location, true);
+        //     //
+        //     var objDoc = objFolder.CreateDocument2(title, "");
 
-                var weekarray = new Array(resSunday, resMonday, resTuesday, resWednesday, resThursday, resFriday, resSaturday);
+        //     var htmltext = parthtml;
 
-                date_string = date_string + " " + weekarray[date.getDay()];
+        //     // 更改文档标题和文件名
+        //     objDoc.ChangeTitleAndFileName(title);
 
-                //alert(date_string);
-
-                htmltext = htmltext.replace("%date%", date_string);
-
-                htmltext = htmltext.replace("%weather%", weather);
-                htmltext = htmltext.replace("%text%", parthtml);
-            } else {
-                htmltext = parthtml;
-            }
-
-            // 更改文档标题和文件名
-            objDoc.ChangeTitleAndFileName(title);
-
-            /**
-             * http://www.wiz.cn/manual/plugin/api/descriptions/IWizDocument.html
-             * 
-             * 更改文档数据，通过HTML文字内容来更新
-             * [id(52), helpstring("method UpdateDocument3")] HRESULT UpdateDocument3([in] BSTR bstrHtml, [in] LONG nFlags);
-             */
-            objDoc.UpdateDocument3(htmltext, 0);
-        }
+        //     /**
+        //      * http://www.wiz.cn/manual/plugin/api/descriptions/IWizDocument.html
+        //      * 
+        //      * 更改文档数据，通过HTML文字内容来更新
+        //      * [id(52), helpstring("method UpdateDocument3")] HRESULT UpdateDocument3([in] BSTR bstrHtml, [in] LONG nFlags);
+        //      */
+        //     objDoc.UpdateDocument3(htmltext, 0);
+        // }
 
         // 进度条进度移动到下一个为知
         objProgress.Pos = iFile + 1;
     }
+
+    objProgress.Hide();
 }
 
 /**
@@ -267,8 +236,8 @@ function submitDialog() {
     }
 
     // 转义路径
-    if (basepath.charAt(basepath.length - 1) != '\\'){
-        basepath = basepath + "\\";        
+    if (basepath.charAt(basepath.length - 1) != '\\') {
+        basepath = basepath + "\\";
     }
 
     // 导入文件到选中的路径
