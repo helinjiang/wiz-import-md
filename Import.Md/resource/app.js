@@ -13,10 +13,10 @@ function setParamValue(doc, key, value) {
 
 
 function stringTrim(str) {
-    if (!str){
-       return ""; 
+    if (!str) {
+        return "";
     }
-        
+
     return str.replace(/(^\s*)|(\s*$)/g, "");
 }
 
@@ -234,23 +234,45 @@ function DoImport(path) {
     }
 }
 
-//
-function CloseDialog(ret) {
-    if (ret == 1) {
-        var basepath = textFolder.value;
-        if (basepath == null || basepath == "")
-            return;
-        if (basepath.charAt(basepath.length - 1) != '\\')
-            basepath = basepath + "\\";
-        //
-        DoImport(basepath);
-        //
+/**
+ * 点击对话框确认按钮
+ */
+function submitDialog() {
+    var basepath = textFolder.value;
+
+    // 如果没有选中路径，则返回
+    if (basepath == null || basepath == "") {
+        return;
     }
+
+    // 转义路径
+    if (basepath.charAt(basepath.length - 1) != '\\'){
+        basepath = basepath + "\\";        
+    }
+
+    // 导入文件到选中的路径
+    DoImport(basepath);
+
+    // 关闭对话框
+    closeDialog();
+}
+
+/**
+ * 关闭对话框
+ */
+function closeDialog() {
     objApp.Window.CloseHtmlDialog(document, ret);
 }
-//
-function buttonBrowse_onclick() {
+
+/**
+ * 点击之后，浏览文件夹
+ */
+function clickToBrowse() {
+    /**
+     * 提示用户选择一个磁盘文件夹。bstrDescription：描述；返回值：用户选择的文件夹
+     * [id(16), helpstring("method SelectWindowsFolder")] HRESULT SelectWindowsFolder([in] BSTR bstrDescription, [out,retval] BSTR* pbtrFolderPath);
+     */
     var importPath = objCommon.SelectWindowsFolder("选择文件夹");
+
     textFolder.value = importPath;
 }
-//

@@ -28,13 +28,13 @@
                 <input id="textFolder" type="text" class="form-control" />
             </div>
             <div class="col-sm-4">
-                <button class="btn btn-info" id="buttonBrowse" onclick="return buttonBrowse_onclick()">浏览...</button>
+                <button class="btn btn-info" id="buttonBrowse" onclick="return clickToBrowse()">浏览...</button>
             </div>
         </div>
         <div class="row">
             <div class="col-sm-12">
-                <button class="btn btn-success" id="buttonOK" onclick="CloseDialog(1);">确 定</button>
-                <button class="btn btn-default" id="buttonCancel" onclick="CloseDialog(2);">取 消</button>
+                <button class="btn btn-success" id="buttonOK" onclick="submitDialog();">确 定</button>
+                <button class="btn btn-default" id="buttonCancel" onclick="closeDialog();">取 消</button>
             </div>
         </div>
     </div>
