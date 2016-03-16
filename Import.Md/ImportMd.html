@@ -1,0 +1,46 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Import Files</title>
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="resource/bootstrap-3.3.5/css/bootstrap.min.css">
+    <style>
+    .container {
+        padding: 10px;
+    }
+    .row {
+        margin-bottom: 20px;
+    }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="alert alert-success" role="alert">
+            支持导入 <code>.md</code> 后缀的文件，并按照文件的目录来新建为知笔记。
+        </div>
+        <div class="row">
+            <div class="col-sm-8">
+                <input id="textFolder" type="text" class="form-control" />
+            </div>
+            <div class="col-sm-4">
+                <button class="btn btn-info" id="buttonBrowse" onclick="return buttonBrowse_onclick()">浏览...</button>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-12">
+                <button class="btn btn-success" id="buttonOK" onclick="CloseDialog(1);">确 定</button>
+                <button class="btn btn-default" id="buttonCancel" onclick="CloseDialog(2);">取 消</button>
+            </div>
+        </div>
+    </div>
+    <script src="resource/jquery.1.12.1.min.js"></script>
+    <script src="resource/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+    <script src="resource/app.js"></script>
+</body>
+
+</html>
