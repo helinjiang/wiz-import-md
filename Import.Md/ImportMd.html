@@ -12,6 +12,7 @@
     .container {
         padding: 10px;
     }
+    
     .row {
         margin-bottom: 20px;
     }
@@ -25,7 +26,7 @@
         </div>
         <div class="row">
             <div class="col-sm-8">
-                <input id="textFolder" type="text" class="form-control" value="E:\testwzimport\"/>
+                <input id="textFolder" type="text" class="form-control" value="E:\testwzimport\" />
             </div>
             <div class="col-sm-4">
                 <button class="btn btn-info" id="buttonBrowse" onclick="return clickToBrowse()">浏览...</button>
@@ -37,10 +38,155 @@
                 <button class="btn btn-default" id="buttonCancel" onclick="closeDialog();">取 消</button>
             </div>
         </div>
+        <div class="row">
+            <div class="col-sm-12">
+                <div id="log"></div>
+            </div>
+        </div>
     </div>
     <script src="resource/jquery.1.12.1.min.js"></script>
     <script src="resource/bootstrap-3.3.5/js/bootstrap.min.js"></script>
-    <script src="resource/app.js"></script>
+    <script type="text/javascript">
+    var objApp = window.external;
+    var objCommon = objApp.CreateWizObject("WizKMControls.WizCommonUI");
+    var objDatabase = objApp.Database;
+
+
+    /**
+     * 导入指定路径中的文件
+     * @param  {string}   path 指定路径
+     */
+    function doImport(path) {
+        // objApp.AppPath wiz的安装路径
+        
+        //枚举一个文件夹下面的文件。bstrPath：文件夹路径；bstrFileExt：扩展名，格式为*.txt;*.jpg;*.png或者*.*；vbIncludeSubFolders：是否包含子文件夹；
+        //返回值：枚举到的文件名。类型为一个安全数组，如果在javascript里面使用，请参阅本文后面部分。
+        var arrFiles = objCommon.EnumFiles(path, "*.md", false);
+
+        // 进度条
+        var objProgress = objApp.CreateWizObject("WizKMControls.WizProgressWindow");
+        objProgress.Show();
+        objProgress.Max = arrFiles.length;
+        objProgress.Title = "正在导入...";
+
+        // 遍历文件
+        for (var iFile = 0; iFile < arrFiles.length; iFile++) {
+            var filename = arrFiles[iFile];
+
+            // 进度条上显示当前处理的文件名
+            objProgress.Text = filename;
+
+            // 获得文件内容
+            // TODO 这里如果文件内容是GBK格式的，则中文不会乱码，其他格式的话会出现乱码
+            var html = objCommon.LoadTextFromFile(filename);         
+
+            // 从路径中获取到文件名
+            var title = getTitle(filename);
+            //log(title);
+
+            // 在为知笔记中的路径
+            // TODO 这里最好的方式应该是要选择保存的路径，而不是在代码中写死
+            var location = "/test导入/";
+
+            /**
+             * http://www.wiz.cn/manual/plugin/api/descriptions/IWizDatabase.html
+             * 
+             * 通过location获得一个文件夹对象。bstrLocation：文件夹location，格式为/abc/def/；vbCreate：是否自动创建这个文件夹。
+             * [id(44), helpstring("method GetFolderByLocation")] HRESULT GetFolderByLocation([in] BSTR bstrLocation, [in] VARIANT_BOOL vbCreate, [out,retval] IDispatch** ppFolderDisp);
+             * 
+             */
+            var objFolder = objDatabase.GetFolderByLocation(location, true);
+
+            /**
+             * http://www.wiz.cn/manual/plugin/api/descriptions/IWizFolder.html
+             * 
+             * 创建一个新的文档。bstrTitle：文档标题；strName：文档名称，一般就是文档对应的磁盘ziw文件名，如果没有指定，才用标题作为文件名；bstrURL：文档的原始URL；返回值：成功创建的文档对象，类型为IWizDocument
+             * [id(12), helpstring("method CreateDocument")] HRESULT CreateDocument([in] BSTR bstrTitle, [in] BSTR strName, [in] BSTR bstrURL, [out,retval] IDispatch** ppNewDocumentDisp);
+             * [id(13), helpstring("method CreateDocument2")] HRESULT CreateDocument2([in] BSTR bstrTitle, [in] BSTR bstrURL, [out,retval] IDispatch** ppNewDocumentDisp);
+             * 
+             */
+            var objDoc = objFolder.CreateDocument2(title, "");
+
+            /**
+             * http://www.wiz.cn/manual/plugin/api/descriptions/IWizDocument.html
+             * 
+             * 更改文档标题和文件名
+             * [id(63), helpstring("method ChangeTitleAndFileName")] HRESULT ChangeTitleAndFileName([in] BSTR bstrTitle);
+             * 
+             */
+            objDoc.ChangeTitleAndFileName(title);
+
+            /**
+             * http://www.wiz.cn/manual/plugin/api/descriptions/IWizDocument.html
+             * 
+             * 更改文档数据，通过HTML文字内容来更新
+             * [id(52), helpstring("method UpdateDocument3")] HRESULT UpdateDocument3([in] BSTR bstrHtml, [in] LONG nFlags);
+             */
+            objDoc.UpdateDocument3(html, 0);
+
+            // 进度条进度移动到下一个为知
+            objProgress.Pos = iFile + 1;
+        }
+
+        objProgress.Hide();
+    }
+
+    function log(msg) {
+        if (typeof msg === 'object') {
+            msg = JSON.stringify(msg);
+        }
+        $('#log').append('<p>' + msg + '</p>');
+    }
+
+    function getTitle(path) {
+        return path.replace(/\\/g, '/').split('/').pop();
+    }
+
+    /**
+     * 点击对话框确认按钮
+     */
+    function submitDialog() {
+        var basepath = textFolder.value;
+
+        // 如果没有选中路径，则返回
+        if (basepath == null || basepath == "") {
+            return;
+        }
+
+        // 转义路径
+        if (basepath.charAt(basepath.length - 1) != '\\') {
+            basepath = basepath + "\\";
+        }
+
+        // 导入文件到选中的路径
+        doImport(basepath);
+
+        // 关闭对话框
+        closeDialog();
+    }
+
+    /**
+     * 关闭对话框
+     */
+    function closeDialog() {
+        objApp.Window.CloseHtmlDialog(document, ret);
+    }
+
+    /**
+     * 点击之后，浏览文件夹
+     */
+    function clickToBrowse() {
+        /**
+         * http://www.wiz.cn/manual/plugin/api/descriptions/IWizCommonUI.html
+         * 
+         * 提示用户选择一个磁盘文件夹。bstrDescription：描述；返回值：用户选择的文件夹
+         * [id(16), helpstring("method SelectWindowsFolder")] HRESULT SelectWindowsFolder([in] BSTR bstrDescription, [out,retval] BSTR* pbtrFolderPath);
+         */
+        var importPath = objCommon.SelectWindowsFolder("选择文件夹");
+
+        textFolder.value = importPath;
+    }
+    </script>
 </body>
 
 </html>
